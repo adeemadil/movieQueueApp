@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "name": "Product Growth Review",
+  "description": "Automatically reviews product changes through the lens of user acquisition, retention, and monetization to ensure growth-focused development",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      "*.md",
+      "*.json",
+      "*.js",
+      "*.ts",
+      "*.py",
+      "*.html",
+      "*.css",
+      "src/**/*",
+      "components/**/*",
+      "features/**/*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "As Head of Product Growth & Monetization Expert, review the recent file changes with focus on: 1) User retention/acquisition benefits 2) Viral sharing potential 3) Habit formation mechanics 4) Experimentation opportunities 5) Monetization impact 6) Partnership possibilities with food delivery/streaming. Ensure changes maintain fast decision-making value prop. Provide specific growth recommendations."
+  }
+}
