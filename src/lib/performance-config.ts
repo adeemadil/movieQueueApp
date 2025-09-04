@@ -36,16 +36,32 @@ export const PERFORMANCE_CONFIG = {
     },
   },
   
-  // Network-aware loading
+  // Network-aware loading optimized for eating context
   networkOptimization: {
     slowConnection: {
       threshold: '2g', // Detect slow connections
       reducedQuality: true,
       skipNonEssential: true,
+      emergencyMode: true, // Skip to emergency picks faster
+    },
+    adaptiveLoading: {
+      // Eating scenarios: prioritize speed over completeness
+      fastTrack: {
+        enabled: true,
+        timeoutMs: 1500, // Faster timeout when eating
+        fallbackToCache: true,
+      },
+      // Progressive enhancement based on connection
+      connectionAware: {
+        '2g': { imageQuality: 60, skipAnimations: true },
+        '3g': { imageQuality: 75, reduceAnimations: true },
+        '4g': { imageQuality: 85, fullExperience: true },
+      },
     },
     preload: {
       recommendations: 3, // Preload top 3 recommendations
       platforms: ['netflix', 'disney', 'prime'], // Most common
+      contextBased: true, // Preload based on meal timing
     },
   },
   

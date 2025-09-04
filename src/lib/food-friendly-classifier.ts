@@ -13,28 +13,48 @@ export interface FoodFriendlyMetrics {
 }
 
 export class FoodFriendlyClassifier {
-  // Genre-based baseline scoring (eating-optimized)
+  // Genre-based baseline scoring (eating-optimized with platform considerations)
   private genreScores = new Map([
-    // High food-friendly (7-10)
-    ['documentary', 8.5], // Usually narrated, steady pace
-    ['cooking', 9.0], // Perfect for eating context
+    // High food-friendly (7-10) - Perfect for eating
+    ['cooking', 9.5], // Perfect for eating context
+    ['food', 9.3], // Food-related content
     ['nature', 8.8], // Calm, beautiful visuals
-    ['comedy', 7.5], // Light, entertaining
-    ['sitcom', 8.0], // Familiar format, easy to follow
+    ['documentary', 8.5], // Usually narrated, steady pace
+    ['sitcom', 8.2], // Familiar format, easy to follow
+    ['comedy', 7.8], // Light, entertaining
+    ['travel', 7.6], // Visual, not plot-heavy
+    ['home-improvement', 7.4], // Relaxing, instructional
     
-    // Medium food-friendly (5-7)
-    ['drama', 6.0], // Depends on complexity
-    ['romance', 6.5], // Usually dialogue-heavy
-    ['animation', 7.0], // Often family-friendly
+    // Medium food-friendly (5-7) - Acceptable while eating
+    ['animation', 7.2], // Often family-friendly (but check for subtitles)
     ['reality', 6.8], // Varies by show type
+    ['romance', 6.5], // Usually dialogue-heavy
+    ['family', 6.4], // Generally safe content
+    ['drama', 6.0], // Depends on complexity
+    ['biography', 5.8], // Can be engaging but not demanding
     
-    // Low food-friendly (1-5)
+    // Low food-friendly (1-5) - Requires attention
+    ['mystery', 4.8], // Plot-heavy
+    ['crime', 4.5], // Often complex narratives
     ['thriller', 4.0], // Requires attention
-    ['horror', 2.0], // Disturbing while eating
+    ['sci-fi', 3.8], // Often complex concepts
     ['action', 3.5], // Fast-paced, complex
-    ['mystery', 4.5], // Plot-heavy
-    ['foreign', 2.0], // Subtitle-heavy
-    ['anime', 3.0], // Usually subtitled
+    ['war', 3.2], // Intense, potentially disturbing
+    ['horror', 2.5], // Disturbing while eating
+    ['foreign', 2.2], // Subtitle-heavy (unless dubbed)
+    ['anime', 2.8], // Usually subtitled, fast dialogue
+    ['korean', 2.0], // K-dramas often subtitle-heavy
+    ['bollywood', 2.5], // Often subtitle-heavy for non-Hindi speakers
+  ])
+  
+  // Platform-specific adjustments (some platforms have better dubbing/accessibility)
+  private platformAdjustments = new Map([
+    ['netflix', { dubbingBonus: 0.5, accessibilityScore: 0.8 }],
+    ['disney', { dubbingBonus: 0.7, accessibilityScore: 0.9 }], // Excellent dubbing
+    ['prime', { dubbingBonus: 0.4, accessibilityScore: 0.7 }],
+    ['hulu', { dubbingBonus: 0.3, accessibilityScore: 0.6 }],
+    ['hbo', { dubbingBonus: 0.4, accessibilityScore: 0.7 }],
+    ['apple', { dubbingBonus: 0.6, accessibilityScore: 0.8 }], // High production values
   ])
   
   // Runtime-based adjustments for eating context
@@ -55,6 +75,10 @@ export class FoodFriendlyClassifier {
     language?: string
     description?: string
     keywords?: string[]
+    platform?: string
+    hasDubbing?: boolean
+    hasClosedCaptions?: boolean
+    contentRating?: string
   }): Promise<FoodFriendlyMetrics> {
     
     const metrics: Partial<FoodFriendlyMetrics> = {
