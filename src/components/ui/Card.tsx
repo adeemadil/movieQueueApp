@@ -36,8 +36,8 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
 
     const variants = {
       recommendation: cn(
-        'bg-glass-primary backdrop-blur-xl p-6 rounded-xl border border-white/20',
-        'hover:bg-white/15 hover:border-white/30 hover:shadow-glass-hover',
+        'bg-slate-800/80 backdrop-blur-xl p-6 rounded-xl border border-white/20',
+        'hover:bg-slate-700/80 hover:border-white/30 hover:shadow-2xl',
         'group cursor-pointer'
       ),
       context: cn(
@@ -53,8 +53,8 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         'transition-all duration-200 cursor-pointer'
       ),
       glass: cn(
-        'bg-glass-elevated backdrop-blur-xl border border-white/10',
-        'rounded-xl shadow-glass'
+        'bg-slate-800/80 backdrop-blur-xl border border-white/10',
+        'rounded-xl shadow-2xl'
       ),
       elevated: cn(
         'bg-semantic-surfaceElevated border border-neutral-700/30',

@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} dark`} suppressHydrationWarning>
       <body
-        className={`${inter.className} bg-neutral-950 text-neutral-100 antialiased`}
+        className={`${inter.className} bg-slate-950 text-gray-100 antialiased`}
         suppressHydrationWarning
       >
         <SessionProvider>

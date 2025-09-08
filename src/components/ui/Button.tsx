@@ -36,27 +36,27 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary: cn(
-        'bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 text-white shadow-xl',
-        'hover:shadow-primary-glow hover:from-primary-500 hover:to-primary-500',
-        'focus:ring-primary-400/50 active:shadow-inner',
+        'bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white shadow-xl',
+        'hover:shadow-blue-500/50 hover:from-blue-500 hover:to-blue-500',
+        'focus:ring-blue-400/50 active:shadow-inner',
         'before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:via-white/10 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300'
       ),
       secondary: cn(
-        'bg-glass-primary backdrop-blur-xl text-neutral-100 border border-white/30 shadow-lg',
+        'bg-slate-800/80 backdrop-blur-xl text-gray-100 border border-white/30 shadow-lg',
         'hover:bg-white/20 hover:border-white/50 hover:shadow-xl hover:text-white',
         'focus:ring-white/30 active:bg-white/10',
         'before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/10 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300'
       ),
       accent: cn(
-        'bg-gradient-to-r from-accent-500 via-accent-400 to-accent-500 text-white shadow-xl',
-        'hover:shadow-accent-glow hover:from-accent-400 hover:to-accent-400',
-        'focus:ring-accent-400/50 active:shadow-inner',
+        'bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500 text-white shadow-xl',
+        'hover:shadow-orange-500/50 hover:from-orange-400 hover:to-orange-400',
+        'focus:ring-orange-400/50 active:shadow-inner',
         'before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:via-white/10 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300'
       ),
       ghost: cn(
-        'bg-transparent text-neutral-300 border border-transparent',
-        'hover:bg-neutral-800/50 hover:text-neutral-100 hover:border-neutral-700/50',
-        'focus:ring-neutral-400/50 active:bg-neutral-800/70'
+        'bg-transparent text-gray-300 border border-transparent',
+        'hover:bg-gray-800/50 hover:text-gray-100 hover:border-gray-700/50',
+        'focus:ring-gray-400/50 active:bg-gray-800/70'
       ),
       emergency: cn(
         'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-2xl',
