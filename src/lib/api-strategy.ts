@@ -1,126 +1,145 @@
-// Multi-tier API strategy for streaming content discovery
-// Designed for resilience against API failures and rate limits
+/**
+ * API Strategy for MealStream
+ * 
+ * Handles the complex reality of streaming platform API limitations
+ * with intelligent fallbacks and caching strategies optimized for
+ * the eating context (users need fast results, can't wait for retries)
+ */
 
 export interface ContentSource {
-  name: string
+  id: string
   priority: number
-  rateLimit: { requests: number; window: number }
-  fallbackDelay: number
+  rateLimit: {
+    requestsPerMinute: number
+    requestsPerDay: number
+  }
+  reliability: number // 0-1 score based on historical uptime
+  cost: number // requests per dollar (for optimization)
 }
 
-export const API_STRATEGY = {
-  // Primary: Streaming Availability API (most comprehensive)
-  primary: {
-    name: 'streaming-availability',
-    baseUrl: process.env.STREAMING_API_URL,
-    rateLimit: { requests: 100, window: 3600000 }, // 100/hour
-    timeout: 2000, // 2s max for eating context
-    retryConfig: {
-      attempts: 2,
-      backoffMs: [500, 1500], // Quick retries for eating context
-      retryOn: [429, 502, 503, 504],
-    },
-  },
-  
-  // Secondary: TMDB (rich metadata, more reliable)
-  secondary: {
-    name: 'tmdb',
-    baseUrl: 'https://api.themoviedb.org/3',
-    rateLimit: { requests: 40, window: 10000 }, // 40/10s
-    timeout: 1500,
-  },
-  
-  // Tertiary: Cached content database (always available)
-  cache: {
-    name: 'local-cache',
-    ttl: 86400000, // 24 hours
-    maxEntries: 10000,
-  },
-  
-  // Emergency: Curated list (when all else fails)
-  emergency: {
-    name: 'emergency-picks',
-    content: 'src/data/emergency-content.json',
-    // Pre-classified food-friendly content by platform
-    byPlatform: {
-      netflix: ['the-office', 'friends', 'brooklyn-99'],
-      disney: ['pixar-shorts', 'nature-documentaries'],
-      prime: ['the-grand-tour', 'cooking-shows'],
-      hulu: ['comedy-specials', 'light-dramas'],
-    },
-  },
-  
-  // Intelligent caching for eating patterns
-  smartCache: {
-    mealTimePreload: true, // Preload during typical meal hours
-    contextAware: true, // Cache based on user's eating patterns
-    platformPriority: ['netflix', 'disney', 'prime', 'hulu'], // Most common first
-  }
-} as const
+export interface APIFallbackChain {
+  primary: ContentSource
+  secondary: ContentSource[]
+  emergency: ContentSource // Local cache/manual data
+}
 
-// Enhanced circuit breaker for streaming platform constraints
-export class StreamingAPICircuitBreaker {
-  private failures = new Map<string, number>()
-  private lastFailure = new Map<string, number>()
-  private rateLimitResets = new Map<string, number>()
+// API Configuration optimized for eating context
+export const API_SOURCES: Record<string, ContentSource> = {
+  streamingAvailability: {
+    id: 'streaming-availability',
+    priority: 1,
+    rateLimit: {
+      requestsPerMinute: 100, // RapidAPI free tier
+      requestsPerDay: 1000,
+    },
+    reliability: 0.95,
+    cost: 0.001, // $1 per 1000 requests
+  },
+  tmdb: {
+    id: 'tmdb',
+    priority: 2,
+    rateLimit: {
+      requestsPerMinute: 40, // TMDB free tier
+      requestsPerDay: 1000000, // Effectively unlimited
+    },
+    reliability: 0.98,
+    cost: 0, // Free
+  },
+  localCache: {
+    id: 'local-cache',
+    priority: 3,
+    rateLimit: {
+      requestsPerMinute: 10000, // Local database
+      requestsPerDay: 1000000,
+    },
+    reliability: 0.99,
+    cost: 0,
+  },
+}
+
+// Eating context optimization: Aggressive caching strategy
+export const CACHE_STRATEGY = {
+  // Cache recommendations for 15 minutes (typical meal duration)
+  recommendationTTL: 15 * 60 * 1000,
   
-  async execute<T>(
-    apiName: string, 
-    operation: () => Promise<T>,
-    fallback: () => Promise<T>,
-    options: {
-      maxFailures?: number
-      resetTimeMs?: number
-      respectRateLimit?: boolean
-    } = {}
-  ): Promise<T> {
-    const { maxFailures = 3, resetTimeMs = 60000, respectRateLimit = true } = options
-    const failureCount = this.failures.get(apiName) || 0
-    const lastFail = this.lastFailure.get(apiName) || 0
-    const rateLimitReset = this.rateLimitResets.get(apiName) || 0
+  // Cache content metadata for 24 hours (changes infrequently)
+  contentMetadataTTL: 24 * 60 * 60 * 1000,
+  
+  // Cache platform availability for 6 hours (changes moderately)
+  platformAvailabilityTTL: 6 * 60 * 60 * 1000,
+  
+  // Emergency cache: Keep 100 most popular food-friendly titles locally
+  emergencyCacheSize: 100,
+  
+  // Prefetch strategy: Load popular content during off-peak hours
+  prefetchSchedule: {
+    enabled: true,
+    hours: [2, 3, 4], // 2-4 AM local time
+    contentTypes: ['comfort-viewing', 'background-friendly'],
+  },
+}
+
+// Circuit breaker pattern for API reliability
+export class APICircuitBreaker {
+  private failures: Map<string, number> = new Map()
+  private lastFailure: Map<string, number> = new Map()
+  private readonly maxFailures = 5
+  private readonly resetTimeout = 60000 // 1 minute
+
+  isOpen(apiId: string): boolean {
+    const failures = this.failures.get(apiId) || 0
+    const lastFailure = this.lastFailure.get(apiId) || 0
     
-    // Circuit open: too many recent failures
-    if (failureCount >= maxFailures && Date.now() - lastFail < resetTimeMs) {
-      console.warn(`Circuit breaker OPEN for ${apiName}, using fallback`)
-      return fallback()
-    }
-    
-    // Rate limit protection: wait if we're still in rate limit window
-    if (respectRateLimit && Date.now() < rateLimitReset) {
-      console.warn(`Rate limit active for ${apiName}, using fallback`)
-      return fallback()
-    }
-    
-    try {
-      const result = await operation()
-      this.failures.set(apiName, 0) // Reset on success
-      return result
-    } catch (error: any) {
-      this.failures.set(apiName, failureCount + 1)
-      this.lastFailure.set(apiName, Date.now())
-      
-      // Handle rate limiting specifically
-      if (error.status === 429) {
-        const retryAfter = error.headers?.['retry-after'] || 3600 // Default 1 hour
-        this.rateLimitResets.set(apiName, Date.now() + (retryAfter * 1000))
-        console.warn(`Rate limited on ${apiName}, backing off for ${retryAfter}s`)
+    if (failures >= this.maxFailures) {
+      if (Date.now() - lastFailure > this.resetTimeout) {
+        this.failures.set(apiId, 0)
+        return false
       }
-      
-      return fallback()
+      return true
     }
+    return false
   }
-  
-  // Get circuit status for monitoring
-  getStatus(apiName: string) {
-    const failures = this.failures.get(apiName) || 0
-    const lastFail = this.lastFailure.get(apiName) || 0
-    const rateLimitReset = this.rateLimitResets.get(apiName) || 0
-    
-    return {
-      failures,
-      isOpen: failures >= 3 && Date.now() - lastFail < 60000,
-      isRateLimited: Date.now() < rateLimitReset,
-      nextRetryAt: Math.max(lastFail + 60000, rateLimitReset),
-    }
+
+  recordFailure(apiId: string): void {
+    const current = this.failures.get(apiId) || 0
+    this.failures.set(apiId, current + 1)
+    this.lastFailure.set(apiId, Date.now())
+  }
+
+  recordSuccess(apiId: string): void {
+    this.failures.set(apiId, 0)
   }
 }
+
+// Rate limiter with eating context awareness
+export class EatingContextRateLimiter {
+  private requests: Map<string, number[]> = new Map()
+
+  async canMakeRequest(apiId: string, isUrgent = false): Promise<boolean> {
+    const source = API_SOURCES[apiId]
+    if (!source) return false
+
+    const now = Date.now()
+    const requests = this.requests.get(apiId) || []
+    
+    // Clean old requests (older than 1 minute)
+    const recentRequests = requests.filter(time => now - time < 60000)
+    
+    // Eating context: Allow burst requests for urgent scenarios
+    const limit = isUrgent 
+      ? Math.floor(source.rateLimit.requestsPerMinute * 1.5) 
+      : source.rateLimit.requestsPerMinute
+
+    if (recentRequests.length >= limit) {
+      return false
+    }
+
+    recentRequests.push(now)
+    this.requests.set(apiId, recentRequests)
+    return true
+  }
+}
+
+// Export singleton instances
+export const circuitBreaker = new APICircuitBreaker()
+export const rateLimiter = new EatingContextRateLimiter()

@@ -1,8 +1,8 @@
-# QuickPick API Documentation
+# MealStream API Documentation
 
 ## Overview
 
-The QuickPick (Streaming Decision Helper) API provides endpoints for context-aware content recommendations optimized for eating scenarios. The API is designed to deliver recommendations in under 30 seconds with a focus on "food-friendly" content classification.
+The MealStream API provides endpoints for context-aware content recommendations optimized for eating scenarios. The API is designed to deliver recommendations in under 30 seconds with a focus on "food-friendly" content classification.
 
 **North Star Metric:** Time from app open to content selection (Target: <30 seconds)
 
@@ -23,7 +23,7 @@ All endpoints require authentication except for health checks.
 ## Base URL
 
 ```
-Production: https://quickpick-api.vercel.app
+Production: https://mealstream.vercel.app
 Development: http://localhost:3000
 ```
 
@@ -339,11 +339,11 @@ npm install @quickpick/sdk
 ```
 
 ```javascript
-import { QuickPick } from '@quickpick/sdk'
+import { MealStream } from '@mealstream/sdk'
 
-const client = new QuickPick({
+const client = new MealStream({
   apiKey: 'your_api_key',
-  baseUrl: 'https://quickpick-api.vercel.app',
+  baseUrl: 'https://mealstream.vercel.app',
 })
 
 const recommendations = await client.getRecommendations({
@@ -360,13 +360,13 @@ const recommendations = await client.getRecommendations({
 ### Python
 
 ```bash
-pip install quickpick-sdk
+pip install mealstream-sdk
 ```
 
 ```python
-from quickpick import QuickPick
+from mealstream import MealStream
 
-client = QuickPick(api_key='your_api_key')
+client = MealStream(api_key='your_api_key')
 
 recommendations = client.get_recommendations(
     context={
@@ -386,7 +386,7 @@ recommendations = client.get_recommendations(
 Import our Postman collection for easy API testing:
 
 ```
-https://api.streaming-helper.com/postman/collection.json
+https://api.mealstream.app/postman/collection.json
 ```
 
 ### Test Environment
@@ -394,13 +394,13 @@ https://api.streaming-helper.com/postman/collection.json
 Use our sandbox environment for development:
 
 ```
-Base URL: https://api-sandbox.streaming-helper.com
+Base URL: https://api-sandbox.mealstream.app
 Test API Key: test_sk_1234567890abcdef
 ```
 
 ## Support
 
-- **Documentation**: https://docs.streaming-helper.com
-- **Status Page**: https://status.streaming-helper.com
-- **Support Email**: api-support@streaming-helper.com
-- **Discord**: https://discord.gg/streaming-helper
+- **Documentation**: https://docs.mealstream.app
+- **Status Page**: https://status.mealstream.app
+- **Support Email**: api-support@mealstream.app
+- **Discord**: https://discord.gg/mealstream

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import SessionProvider from '@/components/providers/SessionProvider'
 import './globals.css'
 
 const inter = Inter({
@@ -22,11 +23,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} dark`}>
+    <html lang="en" className={`${inter.variable} dark`} suppressHydrationWarning>
       <body
-        className={`${inter.className} bg-semantic-background text-neutral-100 antialiased`}
+        className={`${inter.className} bg-neutral-950 text-neutral-100 antialiased`}
+        suppressHydrationWarning
       >
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </body>
     </html>
   )

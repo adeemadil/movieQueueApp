@@ -52,13 +52,13 @@ const config: Config = {
         },
         // Semantic Colors
         semantic: {
-          foodFriendly: '#10B981',
-          attentionRequired: '#F59E0B',
-          subtitleHeavy: '#EF4444',
-          comfortViewing: '#8B5CF6',
-          background: '#020617',
-          surface: '#0F172A',
-          surfaceElevated: '#1E293B',
+          'food-friendly': '#10B981',
+          'attention-required': '#F59E0B',
+          'subtitle-heavy': '#EF4444',
+          'comfort-viewing': '#8B5CF6',
+          'background': '#020617',
+          'surface': '#0F172A',
+          'surface-elevated': '#1E293B',
         },
       },
       fontFamily: {
@@ -177,7 +177,35 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [
+    require('@tailwindcss/typography'),
+    // Custom plugin for glassmorphism utilities
+    function({ addUtilities }: any) {
+      const newUtilities = {
+        '.glass-primary': {
+          background: 'rgba(15, 23, 42, 0.8)',
+          backdropFilter: 'blur(12px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+        },
+        '.glass-elevated': {
+          background: 'rgba(30, 41, 59, 0.9)',
+          backdropFilter: 'blur(16px) saturate(200%)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
+        },
+        '.glass-subtle': {
+          background: 'rgba(2, 6, 23, 0.6)',
+          backdropFilter: 'blur(8px) saturate(150%)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+        },
+        '.bg-gradient-radial': {
+          background: 'radial-gradient(var(--tw-gradient-stops))',
+        },
+      }
+      addUtilities(newUtilities)
+    }
+  ],
 }
 
 export default config

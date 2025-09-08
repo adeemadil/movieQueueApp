@@ -30,6 +30,7 @@ VS Code specific configuration:
 
 - Contains editor settings optimized for Kiro integration
 - **MCP configuration is ENABLED** (`kiroAgent.configureMCP: "Enabled"`)
+- TypeScript auto-closing tags disabled for better development experience
 - Allows MCP server configuration and management through Kiro interface
 
 ## File Conventions

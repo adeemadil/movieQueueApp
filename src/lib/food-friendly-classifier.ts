@@ -1,267 +1,232 @@
-// Food-Friendly Content Classification Engine
-// Optimized for eating context decision making
+/**
+ * Food-Friendly Content Classification System
+ * Core innovation: Understanding eating context for content recommendations
+ */
 
-export interface FoodFriendlyMetrics {
-  subtitleDensity: number // 0-1: subtitle frequency
-  plotComplexity: number // 0-1: narrative complexity
-  visualIntensity: number // 0-1: action/visual chaos
-  dialoguePace: number // 0-1: conversation speed
-  eatingScenes: boolean // Contains food/eating
-  overallScore: number // 1-10: final food-friendly score
-  confidence: number // 0-1: classification confidence
-  reasoning: string[] // Human-readable explanations
+export interface FoodFriendlyFactors {
+  subtitleIntensity: number // 0-1: Heavy subtitles make eating difficult
+  plotComplexity: number // 0-1: Complex plots require full attention
+  visualIntensity: number // 0-1: Fast cuts/action scenes distract from eating
+  audioClarity: number // 0-1: Clear dialogue vs background music heavy
+  eatingScenes: boolean // Contains eating/food scenes (can be triggering)
+  episodeLength: number // Minutes - affects meal timing
+  genreFactors: GenreEatingScore
+}
+
+export interface GenreEatingScore {
+  comedy: number // 8/10 - Light, doesn't require full attention
+  documentary: number // 6/10 - Educational but can be complex
+  action: number // 3/10 - Too intense for eating
+  drama: number // 5/10 - Varies by complexity
+  animation: number // 4/10 - Often subtitle-heavy
+  reality: number // 9/10 - Perfect background viewing
+  news: number // 7/10 - Good for quick meals
+  cooking: number // 2/10 - Can make you feel bad about your meal
 }
 
 export class FoodFriendlyClassifier {
-  // Genre-based baseline scoring (eating-optimized with platform considerations)
-  private genreScores = new Map([
-    // High food-friendly (7-10) - Perfect for eating
-    ['cooking', 9.5], // Perfect for eating context
-    ['food', 9.3], // Food-related content
-    ['nature', 8.8], // Calm, beautiful visuals
-    ['documentary', 8.5], // Usually narrated, steady pace
-    ['sitcom', 8.2], // Familiar format, easy to follow
-    ['comedy', 7.8], // Light, entertaining
-    ['travel', 7.6], // Visual, not plot-heavy
-    ['home-improvement', 7.4], // Relaxing, instructional
-    
-    // Medium food-friendly (5-7) - Acceptable while eating
-    ['animation', 7.2], // Often family-friendly (but check for subtitles)
-    ['reality', 6.8], // Varies by show type
-    ['romance', 6.5], // Usually dialogue-heavy
-    ['family', 6.4], // Generally safe content
-    ['drama', 6.0], // Depends on complexity
-    ['biography', 5.8], // Can be engaging but not demanding
-    
-    // Low food-friendly (1-5) - Requires attention
-    ['mystery', 4.8], // Plot-heavy
-    ['crime', 4.5], // Often complex narratives
-    ['thriller', 4.0], // Requires attention
-    ['sci-fi', 3.8], // Often complex concepts
-    ['action', 3.5], // Fast-paced, complex
-    ['war', 3.2], // Intense, potentially disturbing
-    ['horror', 2.5], // Disturbing while eating
-    ['foreign', 2.2], // Subtitle-heavy (unless dubbed)
-    ['anime', 2.8], // Usually subtitled, fast dialogue
-    ['korean', 2.0], // K-dramas often subtitle-heavy
-    ['bollywood', 2.5], // Often subtitle-heavy for non-Hindi speakers
-  ])
-  
-  // Platform-specific adjustments (some platforms have better dubbing/accessibility)
-  private platformAdjustments = new Map([
-    ['netflix', { dubbingBonus: 0.5, accessibilityScore: 0.8 }],
-    ['disney', { dubbingBonus: 0.7, accessibilityScore: 0.9 }], // Excellent dubbing
-    ['prime', { dubbingBonus: 0.4, accessibilityScore: 0.7 }],
-    ['hulu', { dubbingBonus: 0.3, accessibilityScore: 0.6 }],
-    ['hbo', { dubbingBonus: 0.4, accessibilityScore: 0.7 }],
-    ['apple', { dubbingBonus: 0.6, accessibilityScore: 0.8 }], // High production values
-  ])
-  
-  // Runtime-based adjustments for eating context
-  private runtimeMultipliers = new Map([
-    [15, 1.2], // Perfect snack length
-    [30, 1.1], // Good meal length
-    [45, 1.0], // Standard meal
-    [60, 0.9], // Long meal
-    [90, 0.8], // Extended viewing
-    [120, 0.7], // Very long commitment
-  ])
-  
-  async classifyContent(content: {
-    title: string
-    genres: string[]
-    runtime?: number
-    year?: number
-    language?: string
-    description?: string
-    keywords?: string[]
-    platform?: string
-    hasDubbing?: boolean
-    hasClosedCaptions?: boolean
-    contentRating?: string
-  }): Promise<FoodFriendlyMetrics> {
-    
-    const metrics: Partial<FoodFriendlyMetrics> = {
-      reasoning: []
-    }
-    
-    // 1. Genre Analysis (40% weight)
-    const genreScore = this.analyzeGenres(content.genres, metrics)
-    
-    // 2. Language/Subtitle Analysis (30% weight)
-    const subtitlePenalty = this.analyzeSubtitles(content.language, metrics)
-    
-    // 3. Runtime Optimization (20% weight)
-    const runtimeScore = this.analyzeRuntime(content.runtime, metrics)
-    
-    // 4. Content Analysis (10% weight)
-    const contentScore = this.analyzeContent(content.description, content.keywords, metrics)
-    
-    // Calculate weighted final score
-    const baseScore = (
-      genreScore * 0.4 +
-      (10 - subtitlePenalty) * 0.3 +
-      runtimeScore * 0.2 +
-      contentScore * 0.1
-    )
-    
-    // Apply eating-context adjustments
-    const finalScore = this.applyEatingContextAdjustments(baseScore, content, metrics)
+  private readonly GENRE_SCORES: GenreEatingScore = {
+    comedy: 8,
+    documentary: 6,
+    action: 3,
+    drama: 5,
+    animation: 4,
+    reality: 9,
+    news: 7,
+    cooking: 2
+  }
+
+  private readonly SUBTITLE_KEYWORDS = [
+    'foreign', 'subtitled', 'anime', 'korean', 'japanese', 'spanish',
+    'french', 'german', 'italian', 'mandarin', 'hindi'
+  ]
+
+  private readonly COMPLEX_PLOT_KEYWORDS = [
+    'thriller', 'mystery', 'psychological', 'noir', 'complex',
+    'intricate', 'mind-bending', 'confusing', 'plot-heavy'
+  ]
+
+  private readonly EATING_SCENE_KEYWORDS = [
+    'cooking', 'chef', 'restaurant', 'food', 'eating', 'meal',
+    'kitchen', 'recipe', 'culinary', 'baking', 'feast'
+  ]
+
+  classifyContent(content: ContentMetadata): FoodFriendlyScore {
+    const factors = this.analyzeFactors(content)
+    const overallScore = this.calculateOverallScore(factors)
     
     return {
-      subtitleDensity: subtitlePenalty / 10,
-      plotComplexity: this.calculatePlotComplexity(content.genres),
-      visualIntensity: this.calculateVisualIntensity(content.genres),
-      dialoguePace: this.calculateDialoguePace(content.genres),
-      eatingScenes: this.detectEatingScenes(content.description, content.keywords),
-      overallScore: Math.round(finalScore * 10) / 10,
-      confidence: this.calculateConfidence(content),
-      reasoning: metrics.reasoning || []
+      overallScore,
+      subtitleIntensity: factors.subtitleIntensity,
+      plotComplexity: factors.plotComplexity,
+      visualIntensity: factors.visualIntensity,
+      eatingScenes: factors.eatingScenes,
+      reasoning: this.generateReasoning(factors, overallScore)
     }
   }
-  
-  private analyzeGenres(genres: string[], metrics: Partial<FoodFriendlyMetrics>): number {
-    if (!genres.length) return 5.0 // Neutral default
-    
-    const scores = genres.map(genre => {
-      const score = this.genreScores.get(genre.toLowerCase()) || 5.0
-      if (score >= 8) {
-        metrics.reasoning?.push(`${genre} is excellent for eating`)
-      } else if (score <= 4) {
-        metrics.reasoning?.push(`${genre} requires focused attention`)
-      }
-      return score
-    })
-    
-    return scores.reduce((sum, score) => sum + score, 0) / scores.length
-  }
-  
-  private analyzeSubtitles(language?: string, metrics: Partial<FoodFriendlyMetrics>): number {
-    if (!language) return 2 // Assume some subtitles
-    
-    const englishLanguages = ['en', 'english', 'en-us', 'en-gb']
-    const isEnglish = englishLanguages.includes(language.toLowerCase())
-    
-    if (!isEnglish) {
-      metrics.reasoning?.push('Non-English content requires subtitle reading')
-      return 8 // High subtitle penalty
+
+  private analyzeFactors(content: ContentMetadata): FoodFriendlyFactors {
+    const description = `${content.title} ${content.description || ''}`.toLowerCase()
+    const genres = content.genres || []
+
+    return {
+      subtitleIntensity: this.analyzeSubtitles(description, content.language),
+      plotComplexity: this.analyzePlotComplexity(description, genres),
+      visualIntensity: this.analyzeVisualIntensity(genres, content.rating),
+      audioClarity: this.analyzeAudioClarity(genres),
+      eatingScenes: this.hasEatingScenes(description),
+      episodeLength: content.duration || 0,
+      genreFactors: this.analyzeGenres(genres)
     }
-    
-    return 1 // Minimal subtitle penalty for English
   }
-  
-  private analyzeRuntime(runtime?: number, metrics: Partial<FoodFriendlyMetrics>): number {
-    if (!runtime) return 7.0 // Default assumption
+
+  private analyzeSubtitles(description: string, language?: string): number {
+    // High subtitle intensity = bad for eating
+    if (language && language !== 'en') return 0.9
     
-    // Find closest runtime multiplier
-    const runtimeKeys = Array.from(this.runtimeMultipliers.keys()).sort((a, b) => 
-      Math.abs(runtime - a) - Math.abs(runtime - b)
+    const subtitleMatches = this.SUBTITLE_KEYWORDS.filter(keyword => 
+      description.includes(keyword)
+    ).length
+    
+    return Math.min(subtitleMatches * 0.3, 1.0)
+  }
+
+  private analyzePlotComplexity(description: string, genres: string[]): number {
+    let complexity = 0
+    
+    // Genre-based complexity
+    if (genres.includes('thriller') || genres.includes('mystery')) complexity += 0.4
+    if (genres.includes('sci-fi') || genres.includes('fantasy')) complexity += 0.3
+    if (genres.includes('drama')) complexity += 0.2
+    
+    // Description-based complexity
+    const complexMatches = this.COMPLEX_PLOT_KEYWORDS.filter(keyword =>
+      description.includes(keyword)
+    ).length
+    
+    complexity += complexMatches * 0.2
+    
+    return Math.min(complexity, 1.0)
+  }
+
+  private analyzeVisualIntensity(genres: string[], rating?: string): number {
+    let intensity = 0
+    
+    if (genres.includes('action')) intensity += 0.5
+    if (genres.includes('horror')) intensity += 0.6
+    if (genres.includes('thriller')) intensity += 0.4
+    if (rating === 'R' || rating === 'TV-MA') intensity += 0.3
+    
+    return Math.min(intensity, 1.0)
+  }
+
+  private analyzeAudioClarity(genres: string[]): number {
+    // Higher score = clearer dialogue, better for eating
+    if (genres.includes('comedy')) return 0.9
+    if (genres.includes('documentary')) return 0.8
+    if (genres.includes('news')) return 0.9
+    if (genres.includes('action')) return 0.3 // Loud explosions
+    if (genres.includes('musical')) return 0.4 // Music over dialogue
+    
+    return 0.6 // Default
+  }
+
+  private hasEatingScenes(description: string): boolean {
+    return this.EATING_SCENE_KEYWORDS.some(keyword => 
+      description.includes(keyword)
     )
+  }
+
+  private analyzeGenres(genres: string[]): GenreEatingScore {
+    const scores = { ...this.GENRE_SCORES }
     
-    const closestRuntime = runtimeKeys[0]
-    const multiplier = this.runtimeMultipliers.get(closestRuntime) || 1.0
-    const baseScore = 7.0
-    
-    if (runtime <= 30) {
-      metrics.reasoning?.push('Perfect length for a quick meal')
-    } else if (runtime >= 120) {
-      metrics.reasoning?.push('Long runtime - better for extended viewing')
+    // Adjust based on genre combinations
+    if (genres.includes('comedy') && genres.includes('reality')) {
+      scores.comedy = Math.min(scores.comedy + 1, 10)
     }
     
-    return baseScore * multiplier
+    return scores
   }
-  
-  private analyzeContent(description?: string, keywords?: string[], metrics: Partial<FoodFriendlyMetrics>): number {
-    let score = 7.0 // Neutral default
+
+  private calculateOverallScore(factors: FoodFriendlyFactors): number {
+    let score = 5 // Start neutral
     
-    const text = `${description || ''} ${keywords?.join(' ') || ''}`.toLowerCase()
+    // Subtract for eating-unfriendly factors
+    score -= factors.subtitleIntensity * 4 // Heavy penalty for subtitles
+    score -= factors.plotComplexity * 3 // Moderate penalty for complexity
+    score -= factors.visualIntensity * 2 // Light penalty for visual intensity
+    score -= factors.eatingScenes ? 2 : 0 // Penalty for eating scenes
     
-    // Positive indicators for eating context
-    const positiveTerms = ['cooking', 'food', 'restaurant', 'chef', 'recipe', 'calm', 'relaxing', 'gentle']
-    const negativeTerms = ['intense', 'violent', 'disturbing', 'complex', 'mystery', 'thriller', 'horror']
+    // Add for eating-friendly factors
+    score += factors.audioClarity * 2 // Bonus for clear audio
     
-    positiveTerms.forEach(term => {
-      if (text.includes(term)) {
-        score += 0.5
-        metrics.reasoning?.push(`Contains ${term} - good for eating context`)
-      }
-    })
+    // Genre adjustments
+    const avgGenreScore = Object.values(factors.genreFactors).reduce((a, b) => a + b, 0) / 
+                         Object.values(factors.genreFactors).length
+    score += (avgGenreScore - 5) * 0.5 // Adjust based on genre friendliness
     
-    negativeTerms.forEach(term => {
-      if (text.includes(term)) {
-        score -= 0.8
-        metrics.reasoning?.push(`Contains ${term} - may be distracting while eating`)
-      }
-    })
-    
-    return Math.max(1, Math.min(10, score))
-  }
-  
-  private applyEatingContextAdjustments(
-    baseScore: number, 
-    content: any, 
-    metrics: Partial<FoodFriendlyMetrics>
-  ): number {
-    let adjustedScore = baseScore
-    
-    // Boost score for content that's specifically good while eating
-    if (content.genres?.includes('cooking') || content.genres?.includes('food')) {
-      adjustedScore += 1.5
-      metrics.reasoning?.push('Food-related content - perfect while eating')
+    // Duration adjustments for meal context
+    if (factors.episodeLength > 0) {
+      if (factors.episodeLength <= 30) score += 1 // Perfect for quick meals
+      else if (factors.episodeLength <= 60) score += 0.5 // Good for regular meals
+      else if (factors.episodeLength > 120) score -= 1 // Too long for most meals
     }
     
-    // Penalize content that's known to be attention-demanding
-    const attentionDemanding = ['thriller', 'mystery', 'horror', 'complex-drama']
-    if (content.genres?.some((g: string) => attentionDemanding.includes(g))) {
-      adjustedScore -= 1.0
-      metrics.reasoning?.push('Requires focused attention - not ideal while eating')
+    return Math.max(1, Math.min(10, Math.round(score)))
+  }
+
+  private generateReasoning(factors: FoodFriendlyFactors, score: number): string[] {
+    const reasons: string[] = []
+    
+    if (factors.subtitleIntensity > 0.5) {
+      reasons.push('Heavy subtitles require reading while eating')
     }
     
-    return Math.max(1, Math.min(10, adjustedScore))
-  }
-  
-  private calculatePlotComplexity(genres: string[]): number {
-    const complexGenres = ['thriller', 'mystery', 'sci-fi', 'drama']
-    const simpleGenres = ['comedy', 'documentary', 'reality', 'cooking']
+    if (factors.plotComplexity > 0.6) {
+      reasons.push('Complex plot needs full attention')
+    }
     
-    if (genres.some(g => complexGenres.includes(g))) return 0.8
-    if (genres.some(g => simpleGenres.includes(g))) return 0.2
-    return 0.5
-  }
-  
-  private calculateVisualIntensity(genres: string[]): number {
-    const intenseGenres = ['action', 'horror', 'thriller']
-    const calmGenres = ['documentary', 'cooking', 'nature']
+    if (factors.visualIntensity > 0.7) {
+      reasons.push('Fast-paced visuals may distract from meal')
+    }
     
-    if (genres.some(g => intenseGenres.includes(g))) return 0.9
-    if (genres.some(g => calmGenres.includes(g))) return 0.1
-    return 0.4
-  }
-  
-  private calculateDialoguePace(genres: string[]): number {
-    const fastPaced = ['comedy', 'action', 'thriller']
-    const slowPaced = ['documentary', 'drama', 'nature']
+    if (factors.eatingScenes) {
+      reasons.push('Contains eating scenes that might affect appetite')
+    }
     
-    if (genres.some(g => fastPaced.includes(g))) return 0.8
-    if (genres.some(g => slowPaced.includes(g))) return 0.3
-    return 0.5
-  }
-  
-  private detectEatingScenes(description?: string, keywords?: string[]): boolean {
-    const text = `${description || ''} ${keywords?.join(' ') || ''}`.toLowerCase()
-    const eatingTerms = ['food', 'eating', 'restaurant', 'cooking', 'meal', 'dinner', 'lunch']
-    return eatingTerms.some(term => text.includes(term))
-  }
-  
-  private calculateConfidence(content: any): number {
-    let confidence = 0.5 // Base confidence
+    if (factors.audioClarity > 0.8) {
+      reasons.push('Clear dialogue, easy to follow while eating')
+    }
     
-    // More data = higher confidence
-    if (content.genres?.length > 0) confidence += 0.2
-    if (content.description) confidence += 0.2
-    if (content.runtime) confidence += 0.1
-    if (content.year && content.year > 2000) confidence += 0.1 // Recent content more reliable
+    if (score >= 8) {
+      reasons.push('Perfect background viewing for meals')
+    } else if (score >= 6) {
+      reasons.push('Good for casual meal viewing')
+    } else if (score <= 4) {
+      reasons.push('Better watched when not eating')
+    }
     
-    return Math.min(1.0, confidence)
+    return reasons
   }
+}
+
+// Content metadata interface
+export interface ContentMetadata {
+  title: string
+  description?: string
+  genres: string[]
+  language?: string
+  duration?: number // minutes
+  rating?: string
+  year?: number
+  type: 'movie' | 'series' | 'episode'
+}
+
+export interface FoodFriendlyScore {
+  overallScore: number // 1-10 scale
+  subtitleIntensity: number
+  plotComplexity: number
+  visualIntensity: number
+  eatingScenes: boolean
+  reasoning: string[]
 }

@@ -1,8 +1,8 @@
-# QuickPick Deployment Guide
+# MealStream Deployment Guide
 
 ## Overview
 
-This guide covers deploying QuickPick (Streaming Decision Helper) to production environments following our technical north star of "Fast, Reliable, Scalable, Maintainable". The application uses Next.js 14+ with App Router for a full-stack serverless deployment optimized for the 30-second decision target.
+This guide covers deploying MealStream to production environments following our technical north star of "Fast, Reliable, Scalable, Maintainable". The application uses Next.js 14+ with App Router for a full-stack serverless deployment optimized for the 30-second decision target.
 
 **Technical Architecture Principles:**
 
@@ -66,12 +66,12 @@ Following our "Fast, Reliable, Scalable, Maintainable" technical architecture:
 
 ```env
 # App Configuration
-NEXT_PUBLIC_APP_URL=https://quickpick.vercel.app
-NEXTAUTH_URL=https://quickpick.vercel.app
+NEXT_PUBLIC_APP_URL=https://mealstream.vercel.app
+NEXTAUTH_URL=https://mealstream.vercel.app
 NEXTAUTH_SECRET=your-nextauth-secret-here
 
 # Database
-DATABASE_URL=postgresql://username:password@host:5432/quickpick
+DATABASE_URL=postgresql://username:password@host:5432/mealstream
 REDIS_URL=redis://username:password@host:6379
 
 # Authentication
@@ -159,17 +159,17 @@ LOG_LEVEL=info
    curl -fsSL https://get.planetscale.com/cli | sh
 
    # Create database
-   pscale database create streaming-helper --region us-east
+   pscale database create mealstream --region us-east
 
    # Create branch
-   pscale branch create streaming-helper main
+   pscale branch create mealstream main
    ```
 
 2. **Deploy Schema**
 
    ```bash
    # Connect to branch
-   pscale connect streaming-helper main --port 3309
+   pscale connect mealstream main --port 3309
 
    # Run migrations
    npm run db:migrate:production
@@ -227,7 +227,7 @@ LOG_LEVEL=info
    # render.yaml
    services:
      - type: web
-       name: streaming-helper-api
+       name: mealstream-api
        env: node
        buildCommand: npm install && npm run build
        startCommand: npm start
@@ -236,7 +236,7 @@ LOG_LEVEL=info
            value: production
          - key: DATABASE_URL
            fromDatabase:
-             name: streaming-helper-db
+             name: mealstream-db
              property: connectionString
    ```
 
@@ -306,7 +306,7 @@ LOG_LEVEL=info
 
 6. **Custom Domain**
    ```bash
-   vercel domains add your-domain.com
+   vercel domains add mealstream.app
    ```
 
 ## Redis Cache Setup

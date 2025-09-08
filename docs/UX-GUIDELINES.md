@@ -1,8 +1,8 @@
-# UX Guidelines for QuickPick
+# UX Guidelines for MealStream
 
 ## Overview
 
-QuickPick follows strict UX commandments designed specifically for the eating-while-watching context. These principles ensure users can make content decisions in under 30 seconds without compromising their meal experience.
+MealStream follows strict UX commandments designed specifically for the eating-while-watching context. These principles ensure users can make content decisions in under 30 seconds without compromising their meal experience.
 
 **North Star Metric:** Time from app open to content selection (Target: <30 seconds)
 
@@ -524,6 +524,6 @@ const RecommendationCard = ({ recommendation, loading }: Props) => {
 
 These UX commandments are not suggestions—they are requirements for QuickPick. Every feature, design decision, and code implementation must be evaluated against these principles. The goal is to create the fastest, most respectful content discovery experience for people who just want to eat and watch something good.
 
-**Remember:** If a feature adds more than 5 seconds to the core flow or requires more than 3 taps, it doesn't belong in QuickPick.
+**Remember:** If a feature adds more than 5 seconds to the core flow or requires more than 3 taps, it doesn't belong in MealStream.
 
 The premium design system ensures that every interaction feels polished and intentional, while maintaining the core focus on speed and eating-context optimization. The glassmorphism effects, warm color palette, and smooth animations create a 2025-ready experience that users will want to show their friends.
